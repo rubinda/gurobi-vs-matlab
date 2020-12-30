@@ -24,6 +24,13 @@
 \renewcommand{\lstlistingname}{Koda}% Listing -> Algorithm
 \usepackage{amsmath}
 \usepackage{amssymb}
+\definecolor{deepgreen}{rgb}{0,0.5,0}
+\definecolor{deepblue}{rgb}{0,0,0.5}
+\definecolor{ayu-comment}{RGB}{67,69,71}
+\definecolor{ayu-bg}{RGB}{250,250,250}
+\definecolor{ayu-accent}{RGB}{255, 153, 64}
+\definecolor{ayu-func}{RGB}{57 ,158,	230}
+\definecolor{ayu-string}{RGB}{134, 179, 0}
 
 \lstset{ % nastavitve za izpis kode, sem lahko tudi kaj dodaš/spremeniš
 language=Python,
@@ -31,7 +38,14 @@ basicstyle=\footnotesize,
 basicstyle=\ttfamily\footnotesize\setstretch{1},
 breaklines=true,
 postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
-backgroundcolor=\color{light-gray},
+backgroundcolor=\color{ayu-bg},
+emph={import,from,for,in,as},
+emphstyle=\color{ayu-accent},
+stringstyle=\color{ayu-string},
+showstringspaces=false,
+keywordstyle=\color{ayu-func},
+commentstyle=\color{ayu-comment},
+otherkeywords={read,getVars,optimize}
 }
 
 \title{Primerjava reševanja ILP v Matlab in Gurobi}
@@ -55,7 +69,7 @@ Gurobi je komercialna programska oprema, ki omogoča optimiziranje problemov iz:
 \item kvadratičnega programiranja (angl. \textit{quadratic programming} - QP),
 \item mešanega  celoštevilskega kvadratičnega programiranja (angl. \textit{mixed-integer quadratic programming} - MIQP),
 \item kvadratično omejenega programiranja (angl. \textit{quadratically constrained programming} - QCP),
-\item mešano celoštevilskega kvadratično omejenega programiranja (angl. \textit{Mixed-integer quadratically-constrained programming} - MIQCP.
+\item mešano celoštevilskega kvadratično omejenega programiranja (angl. \textit{Mixed-integer quadratically constrained programming} - MIQCP.
 \end{itemize}
 Pokriva torej veliko območje problemov, za zadnje štiri pa je vredno omeniti, da podpira tako konveksne kot tudi konkavne probleme. Za reševanje nabora problemov imajo implementirane metode Simplex in paralelno oviro s križanjem, sočasnostjo, in sejanjem (angl. \textit{parallel barrier with crossover, concurrent, and sifting}) za bolj zahtevne pa uporabijo tudi deterministično paralelno ne-tradicionalno iskanje, hevristike, rezanja ravnin in pa razbijanje simetrij~\cite{GurobiOptimizer:2020}. 	
 
@@ -148,8 +162,26 @@ Gurobi ima na voljo tudi vmensik za Python. Slednjega lahko namestimo na tri na�
 \texttt{python3 -m pip install -i https://pypi.gurobi.com gurobipy} \\
 Ročna namestitev se izvede s pomočjo \texttt{setup.py}, ki se nahaja znotraj mape kamor smo namestili Gurobi med pridobivanjem licence. Pri obeh omenjenih načinih namestitve je potrebno paziti na kompatibilno verzijo Python (podprte so 2.7 in 3.6 - 3.9 in le 64-bitne različice). Zadnja možnost pa je uporaba Anaconde\footnote{Anaconda je distribucija Pythona dosegljiva na \url{https://www.anaconda.com/}} \\
 \texttt{conda config --add channels https://conda.anaconda.org/gurobi} \\
-\texttt{conda install gurobi} \\
+\texttt{conda install gurobi} 
 
+Namestitev se lahko preveri tudi s pomočjo \texttt{Jupyter notebook}, ki bi moral biti priložen temu poročilu (nahaja se v  \texttt{code/Gurobi-demo.ipynb}). V kolikor si pa bralec želi igrati s tem Jupyter zvezkom, pa je na voljo tudi \texttt{requirements.txt}. V splošnem za zvezek potrebujete \texttt{numpy}, \texttt{scipy} in \texttt{gurobipy} (iz privatnega strežnika), vse drugega so odvisnosti teh paketov. Primer ukazov za macOS/Linux, ki pripravijo okolje in odprejo zvezek za urejanje: \\
+\texttt{python3 -m venv genv} \\
+\texttt{source genv/bin/activate} \\
+\texttt{python3 -m pip install -r requirements.txt} \\
+\texttt{jupyter notebook code/Gurobi-demo.ipynb} \\
+Bralec, ki si ne želi urejati zvezek, si lahkotudi  ogleda statičen zvezek na Github repozitoriju kjer se nahaja to poročilo\footnote{Povezava do Jupyter zvezka \url{https://github.com/rubinda/gurobi-vs-matlab/blob/main/code/Gurobi-demo.ipynb}}. Hiter povzetek uporabe Gurobi v Python skupaj z LP datotekami je viden v kodi~\ref{code:gurobipy}.
+
+\begin{lstlisting}[language=Python,caption=Primer uporabe LP formatov in gurobipy,label=code:gurobipy]
+import gurobipy as gp
+
+m = gp.read('coins.lp') # preberi model
+m.optimize() # optimiziraj
+
+# izpisi rezultate
+for v in m.getVars(): 
+    print(f'{v.varName}={v.x}')
+print(f'vrednost: {m.objVal}')
+\end{lstlisting}
 
 \subsection{Uporaba v Matlab}
 Prepisi iz Quickstart kako se uporabi v Matlab
