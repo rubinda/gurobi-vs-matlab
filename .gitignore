@@ -1,0 +1,19 @@
+# Jupyter
+code/.ipynb_checkpoints
+
+# Python virtual env
+genv
+
+# macOS
+.DS_Store()
+
+# LaTeX
+*.aux
+*.bbl
+*.blg
+*.dvi
+*.log
+*.out
+*.synctex.gz
+
+

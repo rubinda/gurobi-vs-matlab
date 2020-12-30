@@ -1,0 +1,197 @@
+% To je predloga za poročila o domačih nalogah pri predmetih, katerih
+% nosilec je Blaž Zupan. Seveda lahko tudi dodaš kakšen nov, zanimiv
+% in uporaben element, ki ga v tej predlogi (še) ni. Več o LaTeX-u izveš na
+% spletu, na primer na http://tobi.oetiker.ch/lshort/lshort.pdf.
+%
+% To predlogo lahko spremeniš v PDF dokument s pomočjo programa
+% pdflatex, ki je del standardne instalacije LaTeX programov.
+
+\documentclass[a4paper,11pt]{article}
+\usepackage{a4wide}
+\usepackage{fullpage}
+\usepackage[utf8x]{inputenc}
+\usepackage[slovene]{babel}
+\selectlanguage{slovene}
+\usepackage[toc,page]{appendix}
+\usepackage[pdftex]{graphicx} % za slike
+\usepackage{setspace}
+\usepackage{color}
+\definecolor{light-gray}{gray}{0.95}
+\usepackage{listings} % za vključevanje kode
+\usepackage{hyperref}
+\renewcommand{\baselinestretch}{1.2} % za boljšo berljivost večji razmak
+\renewcommand{\appendixpagename}{Priloge}
+\renewcommand{\lstlistingname}{Koda}% Listing -> Algorithm
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\lstset{ % nastavitve za izpis kode, sem lahko tudi kaj dodaš/spremeniš
+language=Python,
+basicstyle=\footnotesize,
+basicstyle=\ttfamily\footnotesize\setstretch{1},
+breaklines=true,
+postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+backgroundcolor=\color{light-gray},
+}
+
+\title{Primerjava reševanja ILP v Matlab in Gurobi}
+\author{David Rubin (david.rubin@student.um.si)}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Uvod}
+
+V tem poročilu si bomo ogledali kako se lahko pohitri reševanje ILP problemov z uvedbo distriburianega procesiranja. Kot standarden čas reševanja bomo uporabili MATLAB oziroma njegovo funkcijo \textit{intlinprog} iz \textit{optimization toolbox-a}.  Kot predlagano pohitritev, smo si v tem poročilu ogledali orodje Gurobi~\footnote{Orodje Gurobi je dostopno na \url{https://www.gurobi.com/}. Za potrebe te naloge smo uporabili akademsko licenco}. Orodje prav tako omogoča določevanje števila uporabljenih niti, tako da lahko orodje tudi nekoliko bolj pošteno primerjamo z \textit{intlinprog}, ko nastavimo enojno nit. Za testne probleme smo si izbrali zbirko MIPLIB2017~\cite{Miplib:2017}. Ker je zbirka precej obsežna, smo iz nje izluščili nekaj problemov, za katere domnevamo, da dovolj dobro predstavljajo testno domeno. Izbrane testne probleme smo predstavili v poglavju~\ref{benchmark_data}. Predvidevamo, da je bralec seznanjen s programskim okoljem MATLAB, zato bomo podali le kratek uvod v Gurobi.
+
+\section{Gurobi}
+
+Gurobi je komercialna programska oprema, ki omogoča optimiziranje problemov iz:
+\begin{itemize}
+\item lineranega programiranja (angl. \textit{linear programming} - LP),
+\item mešanega celoštevilskega linearnega programiranja (angl. \textit{mixed-integer linear programming} - MILP),
+\item kvadratičnega programiranja (angl. \textit{quadratic programming} - QP),
+\item mešanega  celoštevilskega kvadratičnega programiranja (angl. \textit{mixed-integer quadratic programming} - MIQP),
+\item kvadratično omejenega programiranja (angl. \textit{quadratically constrained programming} - QCP),
+\item mešano celoštevilskega kvadratično omejenega programiranja (angl. \textit{Mixed-integer quadratically-constrained programming} - MIQCP.
+\end{itemize}
+Pokriva torej veliko območje problemov, za zadnje štiri pa je vredno omeniti, da podpira tako konveksne kot tudi konkavne probleme. Za reševanje nabora problemov imajo implementirane metode Simplex in paralelno oviro s križanjem, sočasnostjo, in sejanjem (angl. \textit{parallel barrier with crossover, concurrent, and sifting}) za bolj zahtevne pa uporabijo tudi deterministično paralelno ne-tradicionalno iskanje, hevristike, rezanja ravnin in pa razbijanje simetrij~\cite{GurobiOptimizer:2020}. 	
+
+Algoritmi so zasnovani deterministično, torej bi več zagonov skozi isti model dalo enake rezultate. Zasnovani so tudi tako, da po privzetem uporabijo vsa jedra, ki so v nekem sistemu na voljo. Trdijo tudi, da njihovi QCP in MIQCP algoritmi nudijo dvakrat boljšo učinkovitost kot njihov glavni tekmeci~\cite{GurobiBrochure:2020}. Slednje trditve ne moremo  sami potrditi, ne moremo pa je niti zavreči, tako da prepuščamo bralcu, da sam oceni resničnost. Podjetje so ustanovili dr. Robert Bixby, ki je pred tem tudi ustanovil CPLEX in pa Dr. Zonghao 	Gu ter Dr. Edward Rothberg. Slednja sta pred ustanovitvijo sodelovala pri CPLEX kot glavna inženirja~\cite{GurobiTeam:2020}. Kot zanimivost, ime \textit{GuRoBi} je nastalo iz njihovih priimkov. Med njihove partnerje spadajo podjetja kot je recimo Toyota, Microsoft, Google, AirFrance in pa tudi SAP.
+
+Gurobi podpira množico programskih jezikov in oblik programiranja. Nudijo objektno orientirane vmesnike (\texttt{JAVA}, \texttt{C++}, \texttt{.NET} in \texttt{Python}), matrično orientiranie (\texttt{C}, \texttt{MATLAB} in \texttt{R}), povezavo do standardnih modelnih jezikov (\texttt{AIMMS}, \texttt{AMPL}, \texttt{MPL}) in druge~\cite{GurobiOptimizer:2020}. V kolikor bi orodje želeli uporabljati le v jeziku \texttt{Python} se lahko preskoči namestitev celotne knjižnice in uporabi \texttt{pip} ali \texttt{Anaconda} paket. Nudijo pa tudi možnost porazdeljenega reševanja problemov na gruči (\textit{Gurobi Remote Services}), ki pa zahteva ločeno licenco.
+
+\subsection{Priprava okolja}
+
+Za uporabnike je na voljo vodič za hitro namestitev za vse tri večje operacijske sisteme\footnote{Vodič je dostopen na \url{https://www.gurobi.com/documentation/quickstart.html}}. Posebno pozornost je potrebno posvetiti sekciji za pridobitev akademske licence. Zahtevana je uporaba epoštnnega naslova univerze in imeti dostop do spleta v času aktivacije. Po prijavi nam je na voljo dostop do prenosa njihove knjižnice in CLI orodja\footnote{Programska oprema Gurobi se pridobi na naslovu \url{https://www.gurobi.com/downloads/gurobi-software/}}. Znotraj dokumenta navajajo, da se za akademski dostop poleg licenčnega ključa preverja tudi domensko ime iz lokacije dostopa. Pri naši aktivaciji se ni pojavila težava (ukaz \texttt{grbgetkey \textless koda\textgreater}), kljub temu, da smo med aktivacijo dostopali do njihovega strežnika zunaj omrežja univerze. V kolikor Gurobi med aktivacijo sporoči kakšno napako (primer \textit{hostname ... not recognized as belonging to an academic domain}), pa je možna uporaba VPN, ki je na voljo vsem študentom (in zaposlenim) Univerze v Mariboru.
+
+V kolikor je orodje nameščeno in je bila aktivacija uspešna, bi sedaj morali imeti delujoč \textit{Gurobi optimizer} kot je prikazano na sliki~\ref{img:gurobi_license}. Ob težavah se je najbolje obrniti na njih uraden vodič~glede na vaš operacijski sistem~\cite{GurobiQuickstart:2020}.
+\begin{figure}[htpb] \centering
+	\includegraphics[width=0.6\textwidth]{images/gurobi_license.png}
+	\caption{Primer izpisa ukazov za podatke o verziji in licenci po uspešni namestitvi \textit{Gurobi optimizerja} na macOS.}
+	\label{img:gurobi_license}
+\end{figure}
+CLI orodje podpira 14 formatov za podajanje optimizacijskega modela in drugih pomožnih podatkov~\cite{GurobiFormats:2020}. V nadaljevanju bomo uporabljali dva: LP in MPS format. LP format je namenjen za boljšo berljivost iz strani človeka, medtem ko je MPS format najstarejši in najpogosteje uporabljen za shranjevanje matematičnih programskih modelov. MPS format je veliko strožji kar se tiče zapisa (fiksni začetni stolpci za vrednosti ipd.), zato ga bomo le uporabili pri testnih primerih.
+
+\subsection{Reševanje ILP problemov z Gurobi optimizer}
+
+Za boljši vploged v orodje, si bomo v nadaljevanju ogledali enostaven primer optimizacijskega problema in kako se le ta reši s pomčjo Gurobi optimizerja. Primer je prilagojena verzija, katere original se nahaja tudi v vodiču za hiter zagon~\cite{GurobiQuickstart:2020}. 
+
+\subsubsection{Opis problema}
+V času pisanja poročila je blizu konec koledarskega leta. \textit{United States Mint} (ustanova, ki proizvaja ameriške kovance), ima še nekaj neporabljene zaloge materialov za proizvodnjo kovancev. Predpostavimo, da si želijo porabiti vso preteklo zalogo, preden se lotijo nabave materialov za serijo kovancev novo leto. Ustanova proizvaja šest različnih kovancev, sestava katerih pa je podana v tabeli~\ref{tab:us_coins}. Ustanova sedaj želi proizvesti takšne tipe kovancev, da bo njihova skupna vrednost največja. Kakšna naj bo količina vsakega proizvedenega kovanca, če imamo podano zalogo vsakega materiala?
+\begin{table}[hb]
+	\centering
+	\caption{Vsebnost materialov v ameriških kovancih glede na US Mint specifikacijo~\cite{USMintCoins:2019}}.
+	\label{tab:us_coins}
+	\begin{tabular}{r r r r r r r}
+	 & \textbf{Cent} & \textbf{Nickel} & \textbf{Dime} & \textbf{Quarter} & \textbf{Half} & \textbf{Dollar} \\
+	 \hline
+	Baker \texttt{(Cu)} & $0.0625$g & $3.7500$g & $2.0791$g & $5.1977$g & $10.3954$g & $7.1685$g \\
+	Nikelj \texttt{(Ni)} & & $1.2500$g & $0.1889$g & $0.4723$g & $0.9446$g & $0.1620$g \\
+	Cink \texttt{(Zn)} & $2.4375$g & & & & & $0.4860$g \\
+	Mangan \texttt{(Mn)} & & & & & & $0.2835$g \\
+	\hline	
+	Skupaj & $2.5$g & $5.0$g & $2.268$g & $5.670$g & $11.340$g & $8.1$g \\
+	\end{tabular}
+\end{table}
+
+\subsubsection{Priprava vhodnih datotek}
+Za rešitev problema potrebujemo izvesti 3 korake:
+\begin{enumerate}
+\item Določitev odločitvenih spremenljivk
+\item Določitev odločitvene funkcije (v tem primeru linearne)
+\item Določitev omejitev
+\end{enumerate}
+Odločitvene spremenljivke so dokaj jasne: zanima nas količina vsakega kovanca, ki ga naj proizvedemo. Ker smo programerji in za lepšo nazornost jim bomo podali opisna imena, za matematike pa še vektorske spremenljivke. Spremenljivke torej poimenujemo \textit{Cents}, \textit{Nickels}, \textit{Dimes}, \textit{Quarters}, \textit{Halves}, \textit{Dollars} (oziroma $x_1$, $x_2$ ... $x_6$). Vpeljimo pa še imena spremenljivk za porabljeno količino materialov \textit{Cu}, \textit{Ni}, \textit{Zn}, \textit{Mn} ($y_1$, $y_2$, $y_3$ in $y_4$). Te spremenljivke so določene in predstavljajo material, ki je na zalogi. Za zalogo bomo predpostavili 1000g bakra in po 50g vsakega ostalega materiala.
+Formalen matematični zapis modela (ki ga maksimiziramo) se glasi:
+\begin{equation}
+	f(x) = 0.01 x_1 + 0.05 x_2 + 0.1 x_3, + 0.25 x_4 + 0.5 x_5 + 1x_6
+\end{equation}
+pri čemer so $x_n$ količine proizvedenih kovancev, koeficienti pred njimi pa predstavljajo vrednost posameznega kovanca. Omejitve so sledeče:
+\begin{equation}
+\begin{aligned}
+0.0625 x_1 + 3.7500 x_2 + 2.0791 x_3 + 5.1977 x_4 + 10.3954 x_5 + 7.1685 x_6 \leq 1000 \\
+1.2500 x_2 + 0.1889 x_3 + 0.4723 x_4 + 0.9446 x_5 + 0.1620 x_6 \leq 50 \\
+2.4375 x_1 + 0.4860 x_6 \leq 50 \\
+0.2835 x_6 \leq 50 \\
+x_1, x_2, x_3, x_4, x_5, x_6 \in \mathbb{N}
+\end{aligned}
+\end{equation}
+Skratka količina porabljenega materiala ne sme presegati zaloge, prav tako pa ne moremo proizvesti manj kot celoto kovanca (celoštevilska omejitev). Isto omejitev lahko zapišemo na programerski način (prej omenjene opisne spremenljivke) in LP format zapisa (glej kodo~\ref{code:coins_lp}). Slednje nam predstavlja enega izmed možnih vhodov v Gurobi optimizer.
+
+\lstinputlisting[language={}, caption=Primer LP formata za problem proizvodnje kovancev,label=code:coins_lp,firstline=5]{code/coins.lp}
+
+LP format ima nekaj posebnosti. V podanem primeru imamo štiri sekcije (\textit{Maximize}, \textit{Subject to}, \textit{Bounds}, \textit{Integers}), ki si morajo vedno slediti v tem vrstnem redu. Sekcij je lahko več in tudi znotraj sekcij se lahko pojavi  več scenarijev. Vse to je opisano v navodilih za uporabo\footnote{Navodila za LP format v Gurobi \url{https://www.gurobi.com/documentation/9.1/refman/lp_format.html\# format:LP}.}. Druga posebnost je zapis vrednosti (spremenljivk, konstant, operatorjev ...). Te morajo biti ločene s presledki oziroma novimi vrsticami. Tako je \texttt{+ 0.1x} napačen zapis. Pravilno je  \texttt{+ 0.1 x}. Tretje splošno pravilo je, da se spremenljivke vedno pišejo na levi in konstante na desni (primer tega je v sekciji \textit{Subject to}). Na koncu pa naj še omenimo, da je po privzetem spodnja meja enaka 0, razen če je eksplicitno zapisana. Zapis \texttt{Cu <= 1000} je v resnici \texttt{0 <= Cu <= 1000}. To pomeni, da Gurobi po privzetem vsako spremenljivko omeji na nenegativna števila.
+
+\subsubsection{Zagon in rešitve}
+
+Najenostavnejši način uporabe Gurobi, kadar imamo podan model v datoteki, je preko ukazne vrstice. Z ukazom \texttt{gurobi\_cl \textless model.lp\textgreater} lahko poženemo orodje in se problem prične reševati. Kot rešitev imamo na standardnem izhodu podano samo vrednost cenitvene funkcije, če želimo videti še vrednosti posameznih spremenljivk, je potrebno dodati parameter \texttt{ResultFile=<izhod.sol>}. Celoten ukaz je torej: \\
+\texttt{gurobi\_cl ResultFile=code/coins.sol code/coins.lp}\\
+Izpis ukaza je viden na sliki~\ref{img:coins_stdout}, izhodna datoteka z rešitvami pa v kodi~\ref{code:coins_sol}.
+
+\begin{figure}[htpb] \centering
+	\includegraphics[width=0.6\textwidth]{images/gurobi-run_coins.png}
+	\caption{Primer izpisa na standardni izhod pri reševanju problema s kovanci.}
+	\label{img:coins_stdout}
+\end{figure}
+
+\lstinputlisting[language={}, caption=Generirana datoteka z reštivami za problem kovancev,label=code:coins_sol]{code/coins.sol}
+
+Na standardnem izhodu ukaza lahko vidimo nekaj podatkov o problemu, vidimo da se je problem reševal v 8 nitih in da je potreboval 94 Simplex iteracij za doseženo rešitev \$114.9. V izhodni datoteki z rešitvami pa se nahajajo še količine posameznih kovancev: 4 \textit{Dimes}, 50 \textit{Quarters} in 102 \textit{Dollars}.
+
+Obstaja tudi \textit{Gurobi Interactive Shell}, ki temelji na \textit{Python Shell}. Potek ukazov je zelo podoben programiranju v Python, omogoča pa hitrejše spreminjanje modela in zaganjanje v primerjavi z ročnim spreminjanjem vhodne datoteke in vnovičnega poganjanja ukazov. Bolj podroben opis je na voljo v uradni dokumentaciji ali v hitrem vodiču~\cite{GurobiQuickstart:2020}.
+
+\subsection{Uporaba v Python}
+Gurobi ima na voljo tudi vmensik za Python. Slednjega lahko namestimo na tri načine: preko \texttt{pip}, ročno ali pa uproabimo \texttt{Anaconda}. Ne glede na način, ki ga izberemo bo še vedno potrebna pridobitev in namestitev veljavne licence, kot smo opisali v enemu izmed prejšnjih poglavjih. Za potrebe te naloge smo se odločili za namestitev v Python virtualno okolje in uporabo \texttt{pip}. Paket se imenuje \texttt{gurobipy} in v času pisanja naloge (še) ni bil dostopen v javnem PyPi strežniku. Zato se za namestitev uporabi njihov privaten strežnik in ukaz:  \\
+\texttt{python3 -m pip install -i https://pypi.gurobi.com gurobipy} \\
+Ročna namestitev se izvede s pomočjo \texttt{setup.py}, ki se nahaja znotraj mape kamor smo namestili Gurobi med pridobivanjem licence. Pri obeh omenjenih načinih namestitve je potrebno paziti na kompatibilno verzijo Python (podprte so 2.7 in 3.6 - 3.9 in le 64-bitne različice). Zadnja možnost pa je uporaba Anaconde\footnote{Anaconda je distribucija Pythona dosegljiva na \url{https://www.anaconda.com/}} \\
+\texttt{conda config --add channels https://conda.anaconda.org/gurobi} \\
+\texttt{conda install gurobi} \\
+
+
+\subsection{Uporaba v Matlab}
+Prepisi iz Quickstart kako se uporabi v Matlab
+
+
+
+\section{Testna zbirka}
+\label{benchmark_data}
+Izbrei in opisi probleme iz Miplib2017
+
+
+
+\section{Primerjava Gurobi in Matlab}
+Metodologija testiranja
+
+\subsection{Testno okolje}
+Opisi Davids-MBP
+
+\subsection{Performančni rezultati}
+Izrisi grafe za zagone in resene probleme
+
+\section{Zaključek}
+Povzemi kaj smo naredili, kaj smo ugotovili.
+
+\appendix
+\appendixpage
+\section{\label{app-res}Podrobni rezultati poskusov}
+
+Če je rezultatov v smislu tabel ali pa grafov v nalogi mnogo,
+predstavi v osnovnem besedilu samo glavne, podroben prikaz
+rezultatov pa lahko predstaviš v prilogi. V glavnem besedilu ne
+pozabi navesti, da so podrobni rezultati podani v prilogi.
+
+\section{\label{app-code}Programska koda}
+
+Za domače naloge bo tipično potrebno kaj sprogramirati. Če ne bo od
+vas zahtevano, da kodo oddate posebej, to vključite v prilogo. Čisto
+za okus sem tu postavil nekaj kode, ki uporablja Orange
+(\url{http://www.biolab.si/orange}) in razvrščanje v skupine.
+
+
+\bibliographystyle{acm}
+\bibliography{bibliography.bib}
+
+\end{document}
