@@ -39,13 +39,13 @@ basicstyle=\ttfamily\footnotesize\setstretch{1},
 breaklines=true,
 postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
 backgroundcolor=\color{ayu-bg},
-emph={import,from,for,in,as},
+emph={import,from,for,in,as,end,function},
 emphstyle=\color{ayu-accent},
 stringstyle=\color{ayu-string},
 showstringspaces=false,
 keywordstyle=\color{ayu-func},
 commentstyle=\color{ayu-comment},
-otherkeywords={read,getVars,optimize}
+otherkeywords={read,getVars,optimize,write}
 }
 
 \title{Primerjava reševanja ILP v Matlab in Gurobi}
@@ -78,6 +78,7 @@ Algoritmi so zasnovani deterministično, torej bi več zagonov skozi isti model 
 Gurobi podpira množico programskih jezikov in oblik programiranja. Nudijo objektno orientirane vmesnike (\texttt{JAVA}, \texttt{C++}, \texttt{.NET} in \texttt{Python}), matrično orientiranie (\texttt{C}, \texttt{MATLAB} in \texttt{R}), povezavo do standardnih modelnih jezikov (\texttt{AIMMS}, \texttt{AMPL}, \texttt{MPL}) in druge~\cite{GurobiOptimizer:2020}. V kolikor bi orodje želeli uporabljati le v jeziku \texttt{Python} se lahko preskoči namestitev celotne knjižnice in uporabi \texttt{pip} ali \texttt{Anaconda} paket. Nudijo pa tudi možnost porazdeljenega reševanja problemov na gruči (\textit{Gurobi Remote Services}), ki pa zahteva ločeno licenco.
 
 \subsection{Priprava okolja}
+\label{gurobi_install}
 
 Za uporabnike je na voljo vodič za hitro namestitev za vse tri večje operacijske sisteme\footnote{Vodič je dostopen na \url{https://www.gurobi.com/documentation/quickstart.html}}. Posebno pozornost je potrebno posvetiti sekciji za pridobitev akademske licence. Zahtevana je uporaba epoštnnega naslova univerze in imeti dostop do spleta v času aktivacije. Po prijavi nam je na voljo dostop do prenosa njihove knjižnice in CLI orodja\footnote{Programska oprema Gurobi se pridobi na naslovu \url{https://www.gurobi.com/downloads/gurobi-software/}}. Znotraj dokumenta navajajo, da se za akademski dostop poleg licenčnega ključa preverja tudi domensko ime iz lokacije dostopa. Pri naši aktivaciji se ni pojavila težava (ukaz \texttt{grbgetkey \textless koda\textgreater}), kljub temu, da smo med aktivacijo dostopali do njihovega strežnika zunaj omrežja univerze. V kolikor Gurobi med aktivacijo sporoči kakšno napako (primer \textit{hostname ... not recognized as belonging to an academic domain}), pa je možna uporaba VPN, ki je na voljo vsem študentom (in zaposlenim) Univerze v Mariboru.
 
@@ -157,7 +158,7 @@ Na standardnem izhodu ukaza lahko vidimo nekaj podatkov o problemu, vidimo da se
 
 Obstaja tudi \textit{Gurobi Interactive Shell}, ki temelji na \textit{Python Shell}. Potek ukazov je zelo podoben programiranju v Python, omogoča pa hitrejše spreminjanje modela in zaganjanje v primerjavi z ročnim spreminjanjem vhodne datoteke in vnovičnega poganjanja ukazov. Bolj podroben opis je na voljo v uradni dokumentaciji ali v hitrem vodiču~\cite{GurobiQuickstart:2020}.
 
-\subsection{Uporaba v Python}
+\subsection{Uporaba s Python}
 Gurobi ima na voljo tudi vmensik za Python. Slednjega lahko namestimo na tri načine: preko \texttt{pip}, ročno ali pa uproabimo \texttt{Anaconda}. Ne glede na način, ki ga izberemo bo še vedno potrebna pridobitev in namestitev veljavne licence, kot smo opisali v enemu izmed prejšnjih poglavjih. Za potrebe te naloge smo se odločili za namestitev v Python virtualno okolje in uporabo \texttt{pip}. Paket se imenuje \texttt{gurobipy} in v času pisanja naloge (še) ni bil dostopen v javnem PyPi strežniku. Zato se za namestitev uporabi njihov privaten strežnik in ukaz:  \\
 \texttt{python3 -m pip install -i https://pypi.gurobi.com gurobipy} \\
 Ročna namestitev se izvede s pomočjo \texttt{setup.py}, ki se nahaja znotraj mape kamor smo namestili Gurobi med pridobivanjem licence. Pri obeh omenjenih načinih namestitve je potrebno paziti na kompatibilno verzijo Python (podprte so 2.7 in 3.6 - 3.9 in le 64-bitne različice). Zadnja možnost pa je uporaba Anaconde\footnote{Anaconda je distribucija Pythona dosegljiva na \url{https://www.anaconda.com/}} \\
@@ -183,9 +184,50 @@ for v in m.getVars():
 print(f'vrednost: {m.objVal}')
 \end{lstlisting}
 
-\subsection{Uporaba v Matlab}
-Prepisi iz Quickstart kako se uporabi v Matlab
+\subsection{Uporaba z MATLAB}
 
+Enako kot pri Python paketu je treba najprej namestiti knjižnice in pridobiti veljavo licenco (opisano v poglavju~\ref{gurobi_install}). Za delo z MATLAB so pri Gurobi pripravili skripto, ki nam pomaga pri namestitvi vmesnika. Ta skripta (\texttt{gurobi\_setup.m}) se nahaja v mapi \texttt{matlab} v direktoriju kamor smo namestili Gurobi. Privzeta lokacija (verzija 9.1.1) na macOS je \texttt{/Library/gurobi911/\-mac64/matlab} in na Windows \texttt{c:\textbackslash gurobi911\textbackslash win64\textbackslash matlab}. Celoten ukaz namestitve na macOS (klican znotraj MATLAB-a) je potemtakem: \\
+\texttt{cd /Library/gurobi911/mac64/matlab} \\
+\texttt{gurobi\_setup} \\
+ V kolikor se pojavi kakšna napaka je dobro najprej preveriti ali upoštevamo kompatibilnost, saj Gurobi podpira le 64-bitno različico MATLAB-a. Ob uspešeni namestitvi bi se moral pojaviti napis podoben temu na sliki~\ref{img:gurobi_matlab_install}.
+\begin{figure}[hbpt]
+	\centering
+	\includegraphics[width=0.6\textwidth]{images/gurobi_matlab_install.png}
+	\caption{Izpis skripte po uspešni namestivi Gurobi rutin v MATLAB na macOS.}
+	\label{img:gurobi_matlab_install}
+\end{figure}
+
+Pokažimo osnovno uporabo na enakem problemu kot pri Python. V kolikor niste sledili Python zvezku, je problem sledeč:
+\begin{equation}
+\begin{aligned}
+\textbf{maksimiziraj} \hspace{3mm} x + y + 2z  \\
+\textbf{ob omejitvah} \hspace{2mm} x + 2y + 3z \leq 4\\
+x + y \geq 1 \\
+x, y, z \text{ so binarne}
+\end{aligned}
+\end{equation}
+
+V MATLAB si lahko pripravimo skript, ki s pomočjo Gurobi opiše problem, ga shrani kot LP format in požene optimizacijo (koda~\ref{code:gurobi_matlab_script}).
+
+\lstinputlisting[language=Matlab,caption=Reševanje osnovnega problema v MATLAB s pomočjo Gurobi,label=code:gurobi_matlab_script]{code/gurobi_demo.m}
+
+Standardni izhod ob klicanju skripte je prikazan na sliki~\ref{img:gurobi_matlab_demo_run}. Glaven ukaz je \texttt{gurobi(model, params)}, kjer podamo podatke o problemu in pa parametre za optimizacijo. Vse parametre in več o uporabi si bralec lahko prebere v uradni dokumentaciji~\footnote{Uradna Gurobi dokumentacija za MATLAB vmesnik je dostopna na \url{https://www.gurobi.com/documentation/9.1/refman/matlab\_api\_overview.html\#matlab:MATLAB}}. Za boljšo predstavo pa je na voljo tudi več primerov uporabe, ki se nahajajo v mapi namestitve Gurobi (torej \texttt{\textless direktorij namestitve\textgreater /examples/matlab}).
+\begin{figure}[hbpt]
+	\centering
+	\includegraphics[width=0.6\textwidth]{images/gurobi_matlab_demo_run.png}
+	\caption{Izpis rešitve ob uporabi \texttt{gurobi\_demo} skripte.}
+	\label{img:gurobi_matlab_demo_run}
+\end{figure}
+
+Poglejmo si zdaj še primer, kadar želimo uporabiti obsotejčo LP datoteko preko MATLAB vmesnika. Gurobi ponuja med drugim tudi funkcijo, ki to omogoča na zelo enostaven način (glej kodo~\ref{code:gurobi_matlab_demo_file} in sliko~\ref{img:matlab_gurobi_demo_file}).
+
+\lstinputlisting[language=Matlab,caption=Primer reševanja LP problema s Gurobi MATLAB vmesnikom,label=code:gurobi_matlab_demo_file]{code/gurobi_demo_file.m}
+\begin{figure}[htpb]
+	\centering
+	\includegraphics[width=0.6\textwidth]{images/gurobi_matlab_demo_file.png}
+	\caption{Standardni izhod pri zagou \texttt{gurobi\_demo\_file.m} skripte.}
+	\label{img:matlab_gurobi_demo_file}
+\end{figure}
 
 
 \section{Testna zbirka}
@@ -198,7 +240,14 @@ Izbrei in opisi probleme iz Miplib2017
 Metodologija testiranja
 
 \subsection{Testno okolje}
-Opisi Davids-MBP
+Testiranje se je izvajalo na prenosnem računalniku v operacijskem sistemu macOS. Procesor je 4-jedrni (8 niti) Intel Core i7 4700HQ, na voljo pa je imel 8GB delovnega pomnilnika (glej sliko~\ref{img:davids_mbp}). Verzija MATLAB je bila R2020b (9.9.0.1467703) 64-bitna različia iz 26. avgusta 2020, verzija Gurobi pa 9.1.1 build v9.1.1rc0 (mac64). Med posameznimi zagoni so tekli le najnujnejši procesi (torej ali MATLAB ali okno ukazne vrstice z Gurobi), prav tako pa je bil prenosnik priključen v napajanje in ni izvajal kakršnihkoli drugih opravil.
+
+\begin{figure}[htpb]
+	\centering
+	\includegraphics[width=0.7\textwidth]{images/davids-mbp.png}
+	\caption{Podaki računalnika, na katerem se je izvajalo performančno testiranje}
+	\label{img:davids_mbp}
+\end{figure}
 
 \subsection{Performančni rezultati}
 Izrisi grafe za zagone in resene probleme
@@ -215,7 +264,7 @@ predstavi v osnovnem besedilu samo glavne, podroben prikaz
 rezultatov pa lahko predstaviš v prilogi. V glavnem besedilu ne
 pozabi navesti, da so podrobni rezultati podani v prilogi.
 
-\section{\label{app-code}Programska koda}
+\section{Programska koda}
 
 Za domače naloge bo tipično potrebno kaj sprogramirati. Če ne bo od
 vas zahtevano, da kodo oddate posebej, to vključite v prilogo. Čisto
