@@ -58,7 +58,7 @@ otherkeywords={read,getVars,optimize,write}
 
 \section{Uvod}
 
-V tem poročilu si bomo ogledali kako se lahko pohitri reševanje ILP problemov z uvedbo distriburianega procesiranja. Kot standarden čas reševanja bomo uporabili MATLAB oziroma njegovo funkcijo \textit{intlinprog} iz \textit{optimization toolbox-a}.  Kot predlagano pohitritev, smo si v tem poročilu ogledali orodje Gurobi~\footnote{Orodje Gurobi je dostopno na \url{https://www.gurobi.com/}. Za potrebe te naloge smo uporabili akademsko licenco}. Orodje prav tako omogoča določevanje števila uporabljenih niti, tako da lahko orodje tudi nekoliko bolj pošteno primerjamo z \textit{intlinprog}, ko nastavimo enojno nit. Za testne probleme smo si izbrali zbirko MIPLIB2017~\cite{Miplib:2017}. Ker je zbirka precej obsežna, smo iz nje izluščili nekaj problemov, za katere domnevamo, da dovolj dobro predstavljajo testno domeno. Izbrane testne probleme smo predstavili v poglavju~\ref{benchmark_data}. Predvidevamo, da je bralec seznanjen s programskim okoljem MATLAB, zato bomo podali le kratek uvod v Gurobi.
+V tem poročilu si bomo ogledali kako se lahko pohitri reševanje ILP problemov z uvedbo distriburianega procesiranja. Kot standarden čas reševanja bomo uporabili MATLAB oziroma njegovo funkcijo \textit{intlinprog} iz \textit{optimization toolbox-a}.  Kot predlagano pohitritev, smo si v tem poročilu ogledali orodje Gurobi~\footnote{Orodje Gurobi je dostopno na \url{https://www.gurobi.com/}. Za potrebe te naloge smo uporabili akademsko licenco}. Orodje prav tako omogoča določevanje števila uporabljenih niti, tako da lahko orodje tudi nekoliko bolj pošteno primerjamo z \textit{intlinprog}, ko nastavimo enojno nit. Za testne probleme smo si izbrali zbirko MIPLIB2017~\cite{Miplib:2017}. Celotna zbirka je precej obsežna, zato smo se odločili za \textit{benchmark} verzijo, ki vključuje le del vseh problemov. Zbirko in pripravo testnih podatkov smo predstavili v poglavju~\ref{benchmark_data}. Predvidevamo, da je bralec seznanjen s programskim okoljem MATLAB, zato smo podali le kratek uvod v Gurobi.
 
 \section{Gurobi}
 
@@ -92,7 +92,7 @@ CLI orodje podpira 14 formatov za podajanje optimizacijskega modela in drugih po
 
 \subsection{Reševanje ILP problemov z Gurobi optimizer}
 
-Za boljši vploged v orodje, si bomo v nadaljevanju ogledali enostaven primer optimizacijskega problema in kako se le ta reši s pomčjo Gurobi optimizerja. Primer je prilagojena verzija, katere original se nahaja tudi v vodiču za hiter zagon~\cite{GurobiQuickstart:2020}. 
+Za boljši vploged v orodje, si bomo v nadaljevanju ogledali enostaven primer optimizacijskega problema in kako se le ta reši s pomčjo Gurobi optimizerja. Predstavljen primer je prilagojena verzija primera v vodiču za hiter zagon~\cite{GurobiQuickstart:2020}. 
 
 \subsubsection{Opis problema}
 V času pisanja poročila je blizu konec koledarskega leta. \textit{United States Mint} (ustanova, ki proizvaja ameriške kovance), ima še nekaj neporabljene zaloge materialov za proizvodnjo kovancev. Predpostavimo, da si želijo porabiti vso preteklo zalogo, preden se lotijo nabave materialov za serijo kovancev novo leto. Ustanova proizvaja šest različnih kovancev, sestava katerih pa je podana v tabeli~\ref{tab:us_coins}. Ustanova sedaj želi proizvesti takšne tipe kovancev, da bo njihova skupna vrednost največja. Kakšna naj bo količina vsakega proizvedenega kovanca, če imamo podano zalogo vsakega materiala?
@@ -232,9 +232,17 @@ Poglejmo si zdaj še primer, kadar želimo uporabiti obsotejčo LP datoteko prek
 
 \section{Testna zbirka}
 \label{benchmark_data}
-Izbrei in opisi probleme iz Miplib2017
+Testna zbirka MIPLIB2017 je nastala zaradi potrebe raziskovalcev po primerih MIP (angl. \textit{mixed integer programs}) iz realnega sveta. V tem delu smo sicer želeli primerjati le celoštevilske probleme, vendar smo se zaradi enostavnejše primerjave odločili, da uporabimo kar nekaj primerov iz celotne testne zbirke, ki jo sestavljajo tudi mešani primeri (poleg celoštevilskih vsebujejo tudi realne spremenljivke). Drugi razlog za izbiro te zbirke je tudi dejstvo, da se je uveljavila kot standardni performančni test, v katerega so prispevali tudi vsi večji ponudniki optimizacijske programske opreme (Gurobi, CPLEX, Fico, MOSEK ...)\textit{Benchmark set} sestavlja 240 problemov, ki so zaradi praktičnih razlogov izbrani kot primeri z dobro numerično stabilnostjo in dobro rešljivostjo. \textit{Collection set} pa vsebuje še veliko več problemov, med katerimi so tudi še nerešeni. ~\cite{Miplib:2017}.
 
+Vsak izmed primerov je kategoriziran med težke ali lahke primere, podan pa ima tudi kratek opis o parametrih, omejitvah ipd. Na sliki~\ref{img:miplib_sample_set} vidimo izsek o predstavitvi enega izmed primerov. Tašne predstavitve teh problemov so dostopne preko spletne strani \url{http://miplib.zib.de/tag_benchmark.html}.
+\begin{figure}[htpb]
+	\centering
+	\includegraphics[width=0.8\textwidth]{images/miplib_sample_set.png}
+	\caption{Predstavitev problema \texttt{bab6} na MIPLIB2017 spletni strani. \footnotesize Vir: \url{http://miplib.zib.de/instance_details_bab6.html}}
+	\label{img:miplib_sample_set}
+\end{figure}
 
+Zaradi omejitev strojne opreme (in posledično časovne) smo iz zbirke izbrali nekaj problemov, za katere smo preverili, da so rešljivi v relativno kratkem času. Težava s to testno zbirko je, da predvideva reševanje od precej enostavnih do relativno težkih problemov, ki se rešujejo s pomočjo distribuiranih sistemov. Primer takšnega problema, ki se sicer šteje med lažje, je \texttt{50v-10} (opis na  \url{http://miplib.zib.de/instance_details_50v-10.html}). Za slednjega navajajo, da so rešitev našli s pomočjo 2.000 jedrnega super računalnika, žal pa sami do takšne računske zmogljivosti nimamo dostopa.
 
 \section{Primerjava Gurobi in Matlab}
 Metodologija testiranja

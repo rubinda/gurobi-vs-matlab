@@ -5,7 +5,7 @@ code/.ipynb_checkpoints
 genv
 
 # macOS
-.DS_Store()
+.DS_Store
 
 # LaTeX
 *.aux
@@ -18,5 +18,10 @@ genv
 
 # MATLAB
 *.asv
+
+# Datasets (300MB+)
+*.zip
+benchmark_data
+code/benchmark_data
 
 
