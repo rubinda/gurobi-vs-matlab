@@ -2,3 +2,5 @@ markshare_4_0.mps.gz
 neos5.mps.gz
 gen-ip054.mps.gz
 roll3000.mps.gz
+piperout-08.mps.gz
+traininstance2.mps.gz

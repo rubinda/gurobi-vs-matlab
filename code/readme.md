@@ -2,6 +2,8 @@
 
 V tej mapi se nahaja izvorna koda, ki je bila uporabljena pri izdelavi [poročila](../solver-compare.pdf) v tem repozitoriju.
 
++ [`bench_gurobi.m`](bench_gurobi.m)
+    >MATLAB skripta, ki opravi celoten proces spodaj omenjenih preostalih skript (prenese podatke, opravi testiranje nad `MATLAB` in `gurobi_cl`)
 + [`bench_gurobi.sh`](bench_gurobi.sh)
     >Skripta, ki generira rezultate za performanso `gurobi_cl`
 + [`bench_matlab.m`](bench_matlab.m)
