@@ -39,15 +39,15 @@ for i = 1:mps_problems.length
 end
 
 %% Izmeri cas resevanja problemov pri MATLAB: intlinprog
-% Ustvari .csv datoteko s stirimi stolpci:
+% Ustvari .csv datoteko s petimi stolpci:
 %  mps  ... ime problema ki ga resujemo
 %  run  ... zaporedna stevilka zagona (ponavljamo meritve)
 %  time ... pretekli cas v sekundah za najdeno resitev 
 %  fail ... ali program ni uspel najti resitve v dolocenem casu (1/0)
+%  threads ... stevilo uporabljenih jeder (pri intlingprog vedno 1, gre se za skladnost z Gurobi rezultati)
 results_dir = 'runtimes/';
-results_ml = 'matlab.csv';
-if mps_paths.length == 0
-    error('Napaka! Nimam problemov, a ste pognali prvo sekcijo "Pripravi testne primere"?');
+if ~exist('mps_paths', 'var') || mps_paths.length == 0
+    error('Napaka! Nimam problemov, a ste pognali sekcijo "Pripravi testne primere"?');
 end
 if ~exist('N', 'var') || ~exist('TIMEOUT', 'var')
     error('Napaka! Konstante ne obstajajo, ste pognali sekcijo v glavi datoteke?');
@@ -58,9 +58,8 @@ if ~exist(results_dir, 'dir')
 end
 % Ustvari datoteko z rezultati
 fOut = fopen(strcat(results_dir, 'matlab.csv'), 'wt');
-fprintf(fOut, 'mps,run,time,fail\n');
+fprintf(fOut, 'mps,run,time,fail,threads\n');
 % Ponovi meritve N-krat
-
 for i = 1:mps_paths.length
     mps_name = mps_problems(i).split('.'); % Vzemi ime brez koncnice
     % Preberi problem in nastavi custom timeout (default = 2h)
@@ -71,14 +70,65 @@ for i = 1:mps_paths.length
         fprintf('Resujem: %s (%d/%d\n)', mps_name(1), n, N);
         tStart = tic;
          [x,fval,exitflag,output] = intlinprog(problem);
-        tEnd = toc(tStart);
+        tDuration = toc(tStart);
         stopped = 0;
         if exitflag == 0 || exitflag == 2
             % Solver stopped prematurely - verjetno zaradi timeout
             stopped = 1;
         end
         % Zapisi cas trajanja v novo vrstico
-        fprintf(fOut, '%s,%d,%.4f,%d\n', mps_name(1), n, tEnd, stopped);  
+        fprintf(fOut, '%s,%d,%.4f,%d, 1\n', mps_name(1), n, tDuration, stopped);  
     end
 end
 fclose(fOut);
+
+%% Izmeri cas resevanja v Gurobi
+% Ustvari .csv datoteko s petimi stolpci:
+%  mps  ... ime problema ki ga resujemo
+%  run  ... zaporedna stevilka zagona (ponavljamo meritve)
+%  time ... pretekli cas v sekundah za najdeno resitev 
+%  fail ... ali program ni uspel najti resitve v dolocenem casu (1/0)
+%  threads ... stevilo uporabljenih jeder
+results_dir = 'runtimes/';
+if ~exist('mps_paths', 'var') || mps_paths.length == 0
+    error('Napaka! Nimam problemov, a ste pognali sekcijo "Pripravi testne primere"?');
+end
+if ~exist('N', 'var') || ~exist('TIMEOUT', 'var')
+    error('Napaka! Konstante ne obstajajo, ste pognali sekcijo v glavi datoteke?');
+end
+if ~exist('gurobi_read', 'file') || ~exist('gurobi', 'file') % Ukaz vraca 3 -> MEX-file on your MATLAB search path
+    error('Napaka! Gurobi ukazi ne obstajajo, ste pognali gurobi_setup?')
+end
+% Ustvari mapo za rezultate
+if ~exist(results_dir, 'dir')
+    mkdir(results_dir);
+end
+% Ustvari datoteko z rezultati
+fOut = fopen(strcat(results_dir, 'gurobi.csv'), 'wt');
+fprintf(fOut, 'mps,run,time,fail,threads\n');
+% Ponovi meritve N-krat
+for i = 1:mps_paths.length
+    mps_name = mps_problems(i).split('.'); % Vzemi ime brez koncnice
+    % Preberi problem in nastavi custom time limit (default = inf)
+    model = gurobi_read(convertStringsToChars(mps_paths(i))); % gurobi_read hoce char array kot parameter
+    params.TimeLimit = TIMEOUT;
+    for t = [1, 2, 4, 8]  % Predvidevamo, da je procesor zmozen uporabiti 8 niti
+        params.Threads = t; % Stevilo niti, ki se naj uporabijo
+        for n = 1:N
+            % Gurobi v result.runtime shrani cas resevanja
+            result = gurobi(model, params); % Pozeni optimizacijo
+            stopped = 0;
+            % Izhodni status pove zakaj se je optimizacija ustavila ('OPTIMAL', 'INFEASIBLE', 'ITERATION_LIMIT etc.)
+            if strcmp(result.status, 'TIME_LIMIT')  
+                stopped = 1;
+            end
+            disp(result);
+            % Zapisi cas trajanja v novo vrstico
+            fprintf(fOut, '%s,%d,%.4f,%d,%d\n', mps_name(1), n, result.runtime, stopped, params.Threads);
+            break
+        end
+        break
+    end
+    break
+end
+

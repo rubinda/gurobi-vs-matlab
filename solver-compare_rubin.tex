@@ -185,6 +185,7 @@ print(f'vrednost: {m.objVal}')
 \end{lstlisting}
 
 \subsection{Uporaba z MATLAB}
+\label{gurobi_matlab}
 
 Enako kot pri Python paketu je treba najprej namestiti knjižnice in pridobiti veljavo licenco (opisano v poglavju~\ref{gurobi_install}). Za delo z MATLAB so pri Gurobi pripravili skripto, ki nam pomaga pri namestitvi vmesnika. Ta skripta (\texttt{gurobi\_setup.m}) se nahaja v mapi \texttt{matlab} v direktoriju kamor smo namestili Gurobi. Privzeta lokacija (verzija 9.1.1) na macOS je \texttt{/Library/gurobi911/\-mac64/matlab} in na Windows \texttt{c:\textbackslash gurobi911\textbackslash win64\textbackslash matlab}. Celoten ukaz namestitve na macOS (klican znotraj MATLAB-a) je potemtakem: \\
 \texttt{cd /Library/gurobi911/mac64/matlab} \\
@@ -232,7 +233,7 @@ Poglejmo si zdaj še primer, kadar želimo uporabiti obsotejčo LP datoteko prek
 
 \section{Testna zbirka}
 \label{benchmark_data}
-Testna zbirka MIPLIB2017 je nastala zaradi potrebe raziskovalcev po primerih MIP (angl. \textit{mixed integer programs}) iz realnega sveta. V tem delu smo sicer želeli primerjati le celoštevilske probleme, vendar smo se zaradi enostavnejše primerjave odločili, da uporabimo kar nekaj primerov iz celotne testne zbirke, ki jo sestavljajo tudi mešani primeri (poleg celoštevilskih vsebujejo tudi realne spremenljivke). Drugi razlog za izbiro te zbirke je tudi dejstvo, da se je uveljavila kot standardni performančni test, v katerega so prispevali tudi vsi večji ponudniki optimizacijske programske opreme (Gurobi, CPLEX, Fico, MOSEK ...)\textit{Benchmark set} sestavlja 240 problemov, ki so zaradi praktičnih razlogov izbrani kot primeri z dobro numerično stabilnostjo in dobro rešljivostjo. \textit{Collection set} pa vsebuje še veliko več problemov, med katerimi so tudi še nerešeni. ~\cite{Miplib:2017}.
+Testna zbirka MIPLIB2017 je nastala zaradi potrebe raziskovalcev po primerih MIP (angl. \textit{mixed integer programs}) iz realnega sveta. V tem delu smo sicer želeli primerjati le celoštevilske probleme, vendar smo se zaradi enostavnejše primerjave odločili, da uporabimo kar nekaj primerov iz celotne testne zbirke, ki jo sestavljajo tudi mešani primeri (poleg celoštevilskih vsebujejo tudi zvezne spremenljivke). Drugi razlog za izbiro te zbirke je tudi dejstvo, da se je uveljavila kot standardni performančni test, v katerega so prispevali tudi vsi večji ponudniki optimizacijske programske opreme (Gurobi, CPLEX, Fico, MOSEK ...)\textit{Benchmark set} sestavlja 240 problemov, ki so zaradi praktičnih razlogov izbrani kot primeri z dobro numerično stabilnostjo in dobro rešljivostjo. \textit{Collection set} pa vsebuje še veliko več problemov, med katerimi so tudi še nerešeni. ~\cite{Miplib:2017}.
 
 Vsak izmed primerov je kategoriziran med težke ali lahke primere, podan pa ima tudi kratek opis o parametrih, omejitvah ipd. Na sliki~\ref{img:miplib_sample_set} vidimo izsek o predstavitvi enega izmed primerov. Tašne predstavitve teh problemov so dostopne preko spletne strani \url{http://miplib.zib.de/tag_benchmark.html}.
 \begin{figure}[htpb]
@@ -245,7 +246,7 @@ Vsak izmed primerov je kategoriziran med težke ali lahke primere, podan pa ima 
 Zaradi omejitev strojne opreme (in posledično časovne) smo iz zbirke izbrali nekaj problemov, za katere smo preverili, da so rešljivi v relativno kratkem času. Težava s to testno zbirko je, da predvideva reševanje od precej enostavnih do relativno težkih problemov, ki se rešujejo s pomočjo distribuiranih sistemov. Primer takšnega problema, ki se sicer šteje med lažje, je \texttt{50v-10} (opis na  \url{http://miplib.zib.de/instance_details_50v-10.html}). Za slednjega navajajo, da so rešitev našli s pomočjo 2.000 jedrnega super računalnika, žal pa sami do takšne računske zmogljivosti nimamo dostopa.
 
 \section{Primerjava Gurobi in Matlab}
-Metodologija testiranja
+Celotno testiranje smo izvedli v okolju MATLAB. Izbrali smo 10 problemov iz testne zbirke in vsakega trikrat poskusili rešiti s pomočjo MATLAB-ovega \texttt{intlinprog} in pa s Gurobi preko MATLAB vmesnika. Pri Gurobi smo preverili tudi hitrost reševanja ob uporabi 1, 2, 4 ali 8 jeder (omejitev računalnika). Skripta, ki nam to omogoča se imenuje \texttt{bench\_gurobi.m} in bi morala biti priložena temu poročilu. Za njeno uporabo je potreben MATLAB (64-bitna različina z nameščenim \textit{optimization toolbox}) in Gurobi MATLAB vmesnik z veljavno licenco (glej poglavje~\ref{gurobi_install} glede pridobitve licence in poglavje~\ref{gurobi_matlab} za uporabo Gurobi z MATLAB).
 
 \subsection{Testno okolje}
 Testiranje se je izvajalo na prenosnem računalniku v operacijskem sistemu macOS. Procesor je 4-jedrni (8 niti) Intel Core i7 4700HQ, na voljo pa je imel 8GB delovnega pomnilnika (glej sliko~\ref{img:davids_mbp}). Verzija MATLAB je bila R2020b (9.9.0.1467703) 64-bitna različia iz 26. avgusta 2020, verzija Gurobi pa 9.1.1 build v9.1.1rc0 (mac64). Med posameznimi zagoni so tekli le najnujnejši procesi (torej ali MATLAB ali okno ukazne vrstice z Gurobi), prav tako pa je bil prenosnik priključen v napajanje in ni izvajal kakršnihkoli drugih opravil.

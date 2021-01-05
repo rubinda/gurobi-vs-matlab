@@ -5,9 +5,9 @@ V tej mapi se nahaja izvorna koda, ki je bila uporabljena pri izdelavi [poročil
 + [`bench_gurobi.m`](bench_gurobi.m)
     >MATLAB skripta, ki opravi celoten proces spodaj omenjenih preostalih skript (prenese podatke, opravi testiranje nad `MATLAB` in `gurobi_cl`)
 + [`bench_gurobi.sh`](bench_gurobi.sh)
-    >Skripta, ki generira rezultate za performanso `gurobi_cl`
+    >Skripta, ki generira rezultate za performanso `gurobi_cl` (deprecated, glej [`bench_gurobi.m`](bench_gurobi.m))
 + [`bench_matlab.m`](bench_matlab.m)
-    >Koda, ki generira rezultate za performanso `intlinprog`
+    >Koda, ki generira rezultate za performanso `intlinprog` (deprecated, glej [`bench_gurobi.m`](bench_gurobi.m))
 + [`coins.lp`](coins.lp)
     >Primer problema formatiranega v LP datoteko
 + [`coins.sol`](coins.sol)
@@ -23,4 +23,4 @@ V tej mapi se nahaja izvorna koda, ki je bila uporabljena pri izdelavi [poročil
 + [`mps-problmes.txt`](mps-problmes.txt)
     >Imena MIP problemov iz MIPLIB2017 zbirke
 + [`prepare_data.sh`](prepare_data.sh)
-    >Skripta, ki prenese in ekstrahira MIPLIB2017 zbirko
+    >Skripta, ki prenese in ekstrahira MIPLIB2017 zbirko (deprecated, glej [`bench_gurobi.m`](bench_gurobi.m))

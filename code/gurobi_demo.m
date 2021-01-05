@@ -1,9 +1,9 @@
 function gurobi_demo()
     % Povzeto po Gurobi Quickstart vodicu
     names = {'x'; 'y'; 'z'}; % Imena spremenljivk
-    model.A = sparse([1 2 3; 1 1 0]); % Redka matrika A
+    model.A = sparse([1 2 3; -1 -1 0]); % Redka matrika A
     model.obj = [1 1 2]; % Cenitvena funkcija
-    model.rhs = [4; 1]; % b (Right-hand side)
+    model.rhs = [4; -1]; % b (Right-hand side)
     model.vtype = 'B'; % tip spremenljivk (B - binarne)
     model.modelsense = 'max'; % maksimiziraj
     model.varnames = names;
