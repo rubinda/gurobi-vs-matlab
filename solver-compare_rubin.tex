@@ -246,10 +246,10 @@ Vsak izmed primerov je kategoriziran med težke ali lahke primere, podan pa ima 
 Zaradi omejitev strojne opreme (in posledično časovne) smo iz zbirke izbrali nekaj problemov, za katere smo preverili, da so rešljivi v relativno kratkem času. Težava s to testno zbirko je, da predvideva reševanje od precej enostavnih do relativno težkih problemov, ki se rešujejo s pomočjo distribuiranih sistemov. Primer takšnega problema, ki se sicer šteje med lažje, je \texttt{50v-10} (opis na  \url{http://miplib.zib.de/instance_details_50v-10.html}). Za slednjega navajajo, da so rešitev našli s pomočjo 2.000 jedrnega super računalnika, žal pa sami do takšne računske zmogljivosti nimamo dostopa.
 
 \section{Primerjava Gurobi in Matlab}
-Celotno testiranje smo izvedli v okolju MATLAB. Izbrali smo 10 problemov iz testne zbirke in vsakega trikrat poskusili rešiti s pomočjo MATLAB-ovega \texttt{intlinprog} in pa s Gurobi preko MATLAB vmesnika. Pri Gurobi smo preverili tudi hitrost reševanja ob uporabi 1, 2, 4 ali 8 jeder (omejitev računalnika). Skripta, ki nam to omogoča se imenuje \texttt{bench\_gurobi.m} in bi morala biti priložena temu poročilu. Za njeno uporabo je potreben MATLAB (64-bitna različina z nameščenim \textit{optimization toolbox}) in Gurobi MATLAB vmesnik z veljavno licenco (glej poglavje~\ref{gurobi_install} glede pridobitve licence in poglavje~\ref{gurobi_matlab} za uporabo Gurobi z MATLAB).
+Celotno testiranje smo izvedli v okolju MATLAB. Izbrali smo 10 problemov iz testne zbirke in vsakega trikrat poskusili rešiti s pomočjo MATLAB-ovega \texttt{intlinprog} in pa z Gurobi preko MATLAB vmesnika. Pri Gurobi smo preverili tudi hitrost reševanja ob uporabi 1, 2, 4 ali 8 jeder (omejitev računalnika). Skripta, ki nam to omogoča se imenuje \texttt{bench\_gurobi.m} in bi morala biti priložena temu poročilu. Za njeno uporabo je potreben MATLAB (64-bitna različina z nameščenim \textit{optimization toolbox}) in Gurobi MATLAB vmesnik z veljavno licenco (glej poglavje~\ref{gurobi_install} glede pridobitve licence in poglavje~\ref{gurobi_matlab} za uporabo Gurobi z MATLAB). Edina sprememba pri beleženju časa pri MATLAB je to, da reševanje ne ponovimo več v primeru dosežene časovne limite iskanja rešitve. Slednje smo sklenili vključiti zato, ker se pri MATLAB ne spremenijo parametri ob ponovnih zagonih in je verjetnost, da bo v vnovičnem poskusu problem rešil v omejenem času precej majhna. Prav tako pa smo na ta način skrajšali čas testiranja MATLAB za približno pet ur (razpolovili). Prav tako nismo poskušali optimizirati zagone glede na problem ampak smo uporabili privzete nastavitve za vsak problem. Lahko se zgodi, da ob primerni optimizaciji rezultati pridejo drugačni. Namen tega dela je pridobiti grobe ocene pohitritve, za katere ni nujno da odražajo stanje pri reševanju drugih problemov in ob drugačnih nastavitvah.
 
 \subsection{Testno okolje}
-Testiranje se je izvajalo na prenosnem računalniku v operacijskem sistemu macOS. Procesor je 4-jedrni (8 niti) Intel Core i7 4700HQ, na voljo pa je imel 8GB delovnega pomnilnika (glej sliko~\ref{img:davids_mbp}). Verzija MATLAB je bila R2020b (9.9.0.1467703) 64-bitna različia iz 26. avgusta 2020, verzija Gurobi pa 9.1.1 build v9.1.1rc0 (mac64). Med posameznimi zagoni so tekli le najnujnejši procesi (torej ali MATLAB ali okno ukazne vrstice z Gurobi), prav tako pa je bil prenosnik priključen v napajanje in ni izvajal kakršnihkoli drugih opravil.
+Testiranje se je izvajalo na prenosnem računalniku v operacijskem sistemu macOS. Procesor je 4-jedrni (8 niti) Intel Core i7 4700HQ (2.4GHz base in 3.4GHz boost), na voljo pa je imel 8GB delovnega pomnilnika (glej sliko~\ref{img:davids_mbp}). Verzija MATLAB je bila R2020b (9.9.0.1467703) 64-bitna različia iz 26. avgusta 2020, verzija Gurobi pa 9.1.1 build v9.1.1rc0 (mac64). Med posameznimi zagoni so tekli le najnujnejši procesi (torej ali MATLAB ali okno ukazne vrstice z Gurobi), prav tako pa je bil prenosnik priključen v napajanje in ni izvajal kakršnihkoli drugih opravil. Okvirni čas, v katerem se izvede performančno testiranje, je 10 ur za Gurobi in 5 ur za MATLAB. 
 
 \begin{figure}[htpb]
 	\centering
@@ -259,27 +259,27 @@ Testiranje se je izvajalo na prenosnem računalniku v operacijskem sistemu macOS
 \end{figure}
 
 \subsection{Performančni rezultati}
-Izrisi grafe za zagone in resene probleme
+Za čas testiranja smo vpeljali časovno omejitev pol ure na vsak zagon problema. Rezultati časov reševanja so vidni na sliki~\ref{img:bench_times}. Stolpci ki dosegajo vrednost 1800s so bili ustavljeni zaradi prej omenjene limite. Nekateri problemi so bili rešeni precej hitro (v roku nekaj sekund), zato je nekoliko približan prikaz istih rezultatov še prikazan na sliki~\ref{img:bench_times_zoom}.
+\begin{figure}[htpb]
+	\centering
+	\includegraphics[width=\textwidth]{images/benchmark_times.png}
+	\caption{Graf primerjave časov reševanja posameznih problemih z uporabo MATLAB \texttt{intlinprog} in Gurobi z različnim številom jeder (označeno s T= v legendi)}
+	\label{img:bench_times}
+\end{figure}
+
+\begin{figure}[htpb]
+	\centering
+	\includegraphics[width=\textwidth]{images/benchmark_times_zoom.png}
+	\caption{Približan primerjave časov reševanja problemov. Dodatno je treba opomniti, da pri problemu \texttt{markshare\_4\_0} Gurobi vsebuje čase hitrejše od sekunde in so slabo vidni na grafu.}
+	\label{img:bench_times_zoom}
+\end{figure}
 
 \section{Zaključek}
 Povzemi kaj smo naredili, kaj smo ugotovili.
 
 \appendix
 \appendixpage
-\section{\label{app-res}Podrobni rezultati poskusov}
-
-Če je rezultatov v smislu tabel ali pa grafov v nalogi mnogo,
-predstavi v osnovnem besedilu samo glavne, podroben prikaz
-rezultatov pa lahko predstaviš v prilogi. V glavnem besedilu ne
-pozabi navesti, da so podrobni rezultati podani v prilogi.
-
-\section{Programska koda}
-
-Za domače naloge bo tipično potrebno kaj sprogramirati. Če ne bo od
-vas zahtevano, da kodo oddate posebej, to vključite v prilogo. Čisto
-za okus sem tu postavil nekaj kode, ki uporablja Orange
-(\url{http://www.biolab.si/orange}) in razvrščanje v skupine.
-
+\section{\label{app-res}Podrobni rezultati}
 
 \bibliographystyle{acm}
 \bibliography{bibliography.bib}
