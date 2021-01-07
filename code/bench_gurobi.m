@@ -125,10 +125,7 @@ for i = 1:mps_paths.length
             disp(result);
             % Zapisi cas trajanja v novo vrstico
             fprintf(fOut, '%s,%d,%.4f,%d,%d\n', mps_name(1), n, result.runtime, stopped, params.Threads);
-            break
         end
-        break
     end
-    break
 end
 
