@@ -77,7 +77,10 @@ for i = 1:mps_paths.length
             stopped = 1;
         end
         % Zapisi cas trajanja v novo vrstico
-        fprintf(fOut, '%s,%d,%.4f,%d, 1\n', mps_name(1), n, tDuration, stopped);  
+        fprintf(fOut, '%s,%d,%.4f,%d,1\n', mps_name(1), n, tDuration, stopped);  
+        if stopped == 1
+            break; % Preskoci ponovno klicanje funkcij, ki so bile ustavljene (mala verjetnost da bojo naslednjih zakljucile v casu)
+        end
     end
 end
 fclose(fOut);
