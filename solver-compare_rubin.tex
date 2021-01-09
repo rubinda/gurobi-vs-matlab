@@ -259,7 +259,7 @@ Testiranje se je izvajalo na prenosnem računalniku v operacijskem sistemu macOS
 \end{figure}
 
 \subsection{Performančni rezultati}
-Za čas testiranja smo vpeljali časovno omejitev pol ure na vsak zagon problema. Rezultati časov reševanja so vidni na sliki~\ref{img:bench_times}. Stolpci ki dosegajo vrednost 1800s so bili ustavljeni zaradi prej omenjene limite. Nekateri problemi so bili rešeni precej hitro (v roku nekaj sekund), zato je nekoliko približan prikaz istih rezultatov še prikazan na sliki~\ref{img:bench_times_zoom}.
+Za čas testiranja smo vpeljali časovno omejitev pol ure na vsak zagon problema. Rezultati časov reševanja so vidni na sliki~\ref{img:bench_times} in v tabeli~\ref{tab:bench_times}. Stolpci ki dosegajo vrednost 1800s so bili ustavljeni zaradi prej omenjene limite. Nekateri problemi so bili rešeni precej hitro (v roku nekaj sekund), zato je nekoliko približan prikaz istih rezultatov še prikazan na sliki~\ref{img:bench_times_zoom}.
 \begin{figure}[htpb]
 	\centering
 	\includegraphics[width=\textwidth]{images/benchmark_times.png}
@@ -274,12 +274,71 @@ Za čas testiranja smo vpeljali časovno omejitev pol ure na vsak zagon problema
 	\label{img:bench_times_zoom}
 \end{figure}
 
-\section{Zaključek}
-Povzemi kaj smo naredili, kaj smo ugotovili.
+Iz rezultatov je najprej razvidno, da je Gurobi precej hitrejši od MATLAB. Če poračunamo povprečno pohitritev (s pomočjo enačbe~\ref{eq:change}), vidimo, da je v našem primeru Gurobi že ob uporabi ene niti kar $73.89 \%$ hitrejši od funkcije \texttt{intlinprog}. Pri uporabi 8 niti, pa je Gurobi v povprečju hitrejši za $93.57\%$. V tabeli~\ref{tab:bench_changes} najdemo poračunane spremembe pohitritve glede na enačbo~\ref{eq:change} še za preostale kombinacije. Tukaj je potrebno omeniti, da sta problema \textit{rail507} in \textit{beasleyC3} nekoliko popačila rezultate, saj je pri njiju prišlo do anomalije. Vidna je tudi na sliki~\ref{img:bench_times_zom}, če primerjamo oranžen in rumen stolpec vidimo, da sta ta dva problema potrebovala več časa pri reševanju z dvemi jedri kot pa z enim. V obeh primerih smo reševanje ponovili trikrat in vedno dobili enak rezultat. Težava morda leži v naravi problema, ali pa bi bila le potrebna optimizacija Gurobi za reševanje. V kolikor izpustimo ta dva primera, se povprečna pohitritev spremeni na $-36.27\%$. Podobna zgodba se je dogajala tudi pri prehodu iz 4 na 8 jeder. Morda je to zaradi \textit{hyper-threading}, saj je imel testni procesor samo 4 prava jedra in dodatne 4 navidezne. V našem primeru je potem bil čas reševanja na 8 nitih pri polovici primerov tudi daljši v primerjavi z 4 nitmi. Prišli smo do dveh sklepov: ali so navidezna jedra povzročila počasnejše delovanje ali pa je prišlo do prevelike režije za nekatere probleme in posledično daljše čase.
 
-\appendix
-\appendixpage
-\section{\label{app-res}Podrobni rezultati}
+Na grafu~\ref{img:bench_times} se pojavi še nekaj drugih anomalij. Naj najprej omenim, da so vse meritve časov povezane z Gurobi bile ponovljene trikrat. Ročno smo tudi preverili čase in imajo posamezne meritve standardni odklon premajhen, da bi recimo ena meritev drastično vplivala na povprečje. Zato tudi ne znamo popolnoma pojasniti časovno neskladje pri problemu \textit{bnatt400} pri prehodu iz 2. niti v 4. Morda je to stvar optimizacije reševanja, saj se potem pri prehodu iz 4 niti v 8 čas skrajša na pričakovano raven. Pri relativno enostavnih problemih je moč opaziti tudi težavo s preveč režije: ob uporabi več jeder potrebujemo dalj časa da pridemo do iste rešitve. Na grafu je to lepo vidno pri problemu \textit{piperout-08} ali pa \textit{markshare\_4\_0}.
+
+V splošnem gledano, je pohitritev pri spremembi (povečanju) števila jeder odvisna predvsem od problema. Izkaže se, da problemi z veliko vozlišči lahko pridobijo na hitrosti reševanja, kadar uporabimo več jeder. Smo pa ugotovili, da to pravilo ne drži vedno in se lahko pojavijo anomalije pri uporabi določenega števila jeder. Vsekakor pa lahko trdimo, da je orodje Gurobi zelo hitrejše od MATLABove funkcije \texttt{intlinprog}. Če pogledamo na graf~\ref{img:gurobi_vs_matlab} vidimo, da tudi pri uporabi ene same niti v povprečju Gurobi porabi skoraj četrtino časa za reševanje problemov v primerjavi z MATLAB. 
+
+\begin{equation} \label{eq:change}
+pohitritev = \frac{t_{novi}-t_{stari}}{t_{stari}}
+\end{equation}
+
+\begin{table} \centering
+\begin{tabular}{| l | r | r | r | r | r |}
+\hline
+Naziv problema & $\overline{t}_{M}$ & $\overline{t}_{Grb1}$ & $\overline{t}_{Grb2}$ & $\overline{t}_{Grb4}$  & $\overline{t}_{Grb8}$    \\
+\hline
+traininstance2 & 1800.06$s$* & 295.51$s$ & 191.75$s$ & 90.24$s$ & 92.57$s$ \\
+roll3000 & 1800.04$s$* & 16.73$s$ & 10.82$s$ & 9.18$s$ & 12.18 \\
+rail507 & 725.17$s$  & 51.34$s$ & 106.05$s$ & 26.21$s$ & 44.61$s$ \\
+piperout-08 & 446.44$s$ & 2.82$s$ & 2.84$s$ & 4.80$s$ & 5.05$s$ \\
+neos5 & 1129.62$s$ & 208.96$s$ & 89.49$s$ & 39.98$s$ & 30.41$s$ \\
+marskshare\_4\_0 & 99.77$s$ & 0.86$s$ & 0.70$s$ & 0.64$s$ & 1.06$s$ \\
+graphdraw-domain & 1800.03$s$* & 161.48$s$ & 129.65$s$ & 78.40$s$ & 68.69$s$ \\
+gen-ip054 & 1505.69$s$ & 1618.25$s$ & 925.88$s$ & 413.84$s$ & 326.66$s$ \\
+bnatt400 & 1800.46$s$* & 1800.16$s$* & 996.54$s$ & 1355.31$s$ & 391.53$s$ \\
+beasleyC3 & 1800.10$s$* & 3.66$s$ & 5.65$s$ & 5.25$s$ & 4.03$s$ \\ 	
+\hline
+\end{tabular}
+\caption{Povprečni časi reševanja problemov obravnavnih v tej nalogi, pri čemer je $\overline{t}_{M}$ povprečni čas za MATLAB, $\overline{t}_{GrbN}$ pa popvprečni čas za Gurobi ob uporabi $N$ niti. Časi označeni s * pomenijo, da je bilo reševanje ustavljeno zaradi nastavljene časovne limite}
+\label{tab:bench_times}
+\end{table}
+
+\begin{table} \centering
+\begin{tabular}{| l | r | r | r | r | r |}
+\hline
+Pohitritev iz $\rightarrow$ v & Vrednost pohitritve \\
+\hline
+$\Delta \overline{t}_M \rightarrow \overline{t}_{Grb1}$  & $-73.89\%$ \\
+$\Delta \overline{t}_M \rightarrow \overline{t}_{Grb2}$  & $-84.05\%$ \\
+$\Delta \overline{t}_M \rightarrow \overline{t}_{Grb4}$  & $-87.82\%$ \\
+$\Delta \overline{t}_M \rightarrow \overline{t}_{Grb8}$  & $-93.57\%$ \\
+
+$\Delta \overline{t}_{Grb1} \rightarrow \overline{t}_{Grb2}$  & $-9.22\%$ \\
+$\Delta \overline{t}_{Grb2} \rightarrow \overline{t}_{Grb4}$  & $-20.41\%$ \\
+$\Delta \overline{t}_{Grb4} \rightarrow \overline{t}_{Grb8}$  & $+2.55\%$ \\
+$\Delta \overline{t}_{Grb1} \rightarrow \overline{t}_{Grb4}$  & $-30.74\%$ \\
+$\Delta \overline{t}_{Grb1} \rightarrow \overline{t}_{Grb8}$  & $-29.75\%$ \\
+$\Delta \overline{t}_{Grb2} \rightarrow \overline{t}_{Grb8}$  & $-23.39\%$ \\
+	
+\hline
+\end{tabular}
+\caption{Povprečne pohitritve (glede na enačbo~\ref{eq:change}) pri spreminjanju števila niti v Gurobi in v primerjavi z MATLAB. $\overline{t}_{M}$ predstavlja povprečni čas za MATLAB, $\overline{t}_{GrbN}$ pa popvprečni čas za Gurobi ob uporabi $N$ niti}
+\label{tab:bench_changes}
+\end{table}
+
+\begin{figure}[htpb]
+	\centering
+	\includegraphics[width=0.7\textwidth]{images/gurobi_matlab_speedup.png}
+	\caption{Primerjava povprečnih deležov časa (izraženi v odstotkih) porabljenih za reševanje naših testnih problemov.}
+	\label{img:gurobi_vs_matlab}
+\end{figure}
+
+\section{Zaključek}
+V nalogi smo raziskali orodje Gurobi, njegovo uporabo in preverili njegovo performanso v primerjavi z MATLAB. Iskali smo tudi koeficient pohitritve pri uporabi več jeder za reševanje MIP problemov. Prišli so do ugotovitve, da koeficient pohitritve ni enak koeficientu povečanja jeder ampak je nekoliko manjši. Do večjega izraza je prihajalo pri spremembi iz 1 jedra v 2, kjer je v večini primerov pohitritev znašala nekje 35-40\%. Smo pa tudi ugotovili, da so pohitritve tudi odvisne od samih problemov, ki jih rešujemo. Pri nekaterih se povečanje število jeder bolj izrazi v času reševanja kot pa pri ostalih.
+
+Vsekakor pa bi priporočali uporabo orodja Gurobi, sa je za akademske namene brezplačen, omogoča pa znatno boljše performanse v primerjavi z MATLAB.
 
 \bibliographystyle{acm}
 \bibliography{bibliography.bib}
